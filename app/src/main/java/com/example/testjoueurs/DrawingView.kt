@@ -59,10 +59,14 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         mPaintBleu!!.style = Paint.Style.FILL
         mPaintVert!!.style = Paint.Style.FILL
         // Initialisation du rectangle représentant la boule.
-        val rectXB = 400f //  coordonnée de départ x
-        val rectYB = 400f //  coordonnée de départ y
-        val rectXV = 800f //  coordonnée de départ x
-        val rectYV = 1200f //  coordonnée de départ y
+
+        val h = resources.displayMetrics.heightPixels.toFloat()
+        val w = resources.displayMetrics.widthPixels.toFloat()
+
+        val rectXB = w / 2 //  coordonnée de départ x
+        val rectYB = h / 4 //  coordonnée de départ y
+        val rectXV = w / 2 //  coordonnée de départ x
+        val rectYV = 3*h / 4 //  coordonnée de départ y
         mBallRectB = RectF(rectXB, rectYB, rectXB + ballSize, rectYB + ballSize)
         mBallRectV = RectF(rectXV, rectYV, rectXV + ballSize, rectYV + ballSize)
 
