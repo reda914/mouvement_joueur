@@ -14,10 +14,12 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
 
     // Le PINCEAU utilisé pour DESSINER la boule bleue.
     // Le ? rend la variable nullable
-    private var mPaint: Paint? = null
+    private var mPaintBleu: Paint? = null
+    private var mPaintVert: Paint? = null
 
     // Le RECTANGLE représentant la ZONE de la boule.
-    private var mBallRect: RectF? = null
+    private var mBallRectB: RectF? = null
+    private var mBallRectV: RectF? = null
 
     // Variables pour stocker la DERNIERE POSITION du toucher
     private var mLastTouchX: Float = 0.toFloat()
@@ -26,6 +28,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     // Indique si l'utilisateur a cliqué sur la balle.
     // False = il a pas cliqué ; True = il a cliqué ;
     private var a_cliquer: Boolean = false
+    private var a_cliquerV: Boolean = false
 
     // La hauteur de l'écran
     // Conversion en float car consomme moins de mémoire ; comparé à double (64bits), float(32bits) est moins précis
@@ -44,17 +47,25 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     // Méthode pour configurer le dessin initial de la boule.
     private fun setupDrawing() {
         // Initialisation du PINCEAU.
-        mPaint = Paint()
+        mPaintBleu = Paint()
+        mPaintVert = Paint()
         // Configuration de la COULEUR du pinceau en bleu.
-        mPaint!!.color = Color.BLUE
+        mPaintBleu!!.color = Color.BLUE
+        mPaintVert!!.color = Color.GREEN
         // Activation de LISSAGE (anti-alisaing) pour des bords plus lisses.
-        mPaint!!.isAntiAlias = true
+        mPaintBleu!!.isAntiAlias = true
+        mPaintVert!!.isAntiAlias = true
         // Configuration du style de dessin du pinceau à REMPLISSAGE.
-        mPaint!!.style = Paint.Style.FILL
+        mPaintBleu!!.style = Paint.Style.FILL
+        mPaintVert!!.style = Paint.Style.FILL
         // Initialisation du rectangle représentant la boule.
-        val rectX = 400f //  coordonnée de départ x
-        val rectY = 400f //  coordonnée de départ y
-        mBallRect = RectF(rectX, rectY, rectX + ballSize, rectY + ballSize)
+        val rectXB = 400f //  coordonnée de départ x
+        val rectYB = 400f //  coordonnée de départ y
+        val rectXV = 800f //  coordonnée de départ x
+        val rectYV = 1200f //  coordonnée de départ y
+        mBallRectB = RectF(rectXB, rectYB, rectXB + ballSize, rectYB + ballSize)
+        mBallRectV = RectF(rectXV, rectYV, rectXV + ballSize, rectYV + ballSize)
+
         // Récupération de la hauteur et largeur de l'écran
         screenHeight = resources.displayMetrics.heightPixels.toFloat()-300 //Le -300 est un traficotage pour que ça colle avec les lignes de terrain
         screenWidth = resources.displayMetrics.widthPixels.toFloat()-150 //Traficotage également
@@ -66,23 +77,36 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         // Dessin de la boule sur le canvas avec le pinceau configuré.
-        canvas.drawOval(mBallRect!!, mPaint!!)
+        canvas.drawOval(mBallRectB!!, mPaintBleu!!)
+        canvas.drawOval(mBallRectV!!, mPaintVert!!)
     }
 
     // Méthode pour mettre à jour la position de la boule en fonction des coordonnées x et y fournies.
-    private fun updateBallPosition(x: Float, y: Float) {
+    private fun updateBallBPosition(x: Float, y: Float) {
         // Vérifie si la nouvelle position est dans la moitié supérieure de l'écran
         // Si oui, alors on change les attributs=position de mBallRect qui est le rectangle où est inscrit la balleS
         if (y >= 12 && y <= screenHeight / 2 && x >= 12 && x <= screenWidth) {
-            mBallRect!!.left = x
-            mBallRect!!.top = y
-            mBallRect!!.right = x + ballSize
-            mBallRect!!.bottom = y + ballSize
+            mBallRectB!!.left = x
+            mBallRectB!!.top = y
+            mBallRectB!!.right = x + ballSize
+            mBallRectB!!.bottom = y + ballSize
+        }
+    }
+
+    private fun updateBallVPosition(x: Float, y: Float) {
+        // Vérifie si la nouvelle position est dans la moitié supérieure de l'écran
+        // Si oui, alors on change les attributs=position de mBallRect qui est le rectangle où est inscrit la balleS
+        if (y < screenHeight+150 && y > screenHeight / 2 +150 && x >= 12 && x <= screenWidth) {
+            mBallRectV!!.left = x
+            mBallRectV!!.top = y
+            mBallRectV!!.right = x + ballSize
+            mBallRectV!!.bottom = y + ballSize
         }
     }
 
 
-    // Redéfinition de onTouchEvent
+
+        // Redéfinition de onTouchEvent
     // Méthode appelée lorsqu'un événement tactile est détecté sur la vue.
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // Récupération des coordonnées x et y de l'événement tactile.
@@ -95,9 +119,13 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
             MotionEvent.ACTION_DOWN -> {
                 // Lorsque l'utilisateur appuie sur l'écran,
                 // vérifie si la position de l'événement est à l'intérieur de la boule.
-                if (mBallRect!!.contains(x, y)) {
+                if (mBallRectB!!.contains(x, y)) {
                     // Indique que l'utilisateur a cliqué sur la balle.
                     a_cliquer = true
+                }
+                if (mBallRectV!!.contains(x, y)) {
+                    // Indique que l'utilisateur a cliqué sur la balle.
+                    a_cliquerV = true
                 }
                 // Stocke la position du toucher actuel pour la prochaine mise à jour.
                 mLastTouchX = x
@@ -111,7 +139,19 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                     val diffx = x - mLastTouchX
                     val diffy = y - mLastTouchY
                     // Met à jour la position de la boule en ajoutant la différence de position à sa position actuelle.
-                    updateBallPosition(mBallRect!!.left + diffx, mBallRect!!.top + diffy)
+                    updateBallBPosition(mBallRectB!!.left + diffx, mBallRectB!!.top + diffy)
+                    // Stocke la position du toucher actuel pour la prochaine mise à jour.
+                    mLastTouchX = x
+                    mLastTouchY = y
+                    // Demande à la vue de se redessiner pour afficher la nouvelle position de la boule.
+                    invalidate()
+                }
+                if (a_cliquerV) {
+                    // Calcul de la différence de position entre le toucher actuel et le toucher précédent.
+                    val diffx = x - mLastTouchX
+                    val diffy = y - mLastTouchY
+                    // Met à jour la position de la boule en ajoutant la différence de position à sa position actuelle.
+                    updateBallVPosition(mBallRectV!!.left + diffx, mBallRectV!!.top + diffy)
                     // Stocke la position du toucher actuel pour la prochaine mise à jour.
                     mLastTouchX = x
                     mLastTouchY = y
@@ -119,14 +159,15 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
                     invalidate()
                 }
             }
-            //ACTION_UP veut dire doigts pas sur sur l'écran
-            MotionEvent.ACTION_UP -> {
-                // Réinitialise l'état de glissement lorsque l'utilisateur relâche l'écran.
-                a_cliquer = false
+                //ACTION_UP veut dire doigts pas sur sur l'écran
+                MotionEvent.ACTION_UP -> {
+                    // Réinitialise l'état de glissement lorsque l'utilisateur relâche l'écran.
+                    a_cliquer = false
+                    a_cliquerV = false
+                }
             }
-        }
 
-        // Indique que l'événement a été traité.
-        return true
+            // Indique que l'événement a été traité.
+            return true
+        }
     }
-}
