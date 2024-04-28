@@ -6,167 +6,108 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 
-// Cette classe représente une vue personnalisée pour dessiner et déplacer une boule bleue sur l'écran.
 class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
-    // On met tout ça =O ou null pour les INITIALISER ; déjà préciser leur type et qu'elles sont private
-    //idée: possibilité de les mettre en lateinit
+    private var mPaintBlue: Paint? = null
+    private var mPaintGreen: Paint? = null
 
-    // Le PINCEAU utilisé pour DESSINER la boule bleue.
-    // Le ? rend la variable nullable
-    private var mPaintBleu: Paint? = null
-    private var mPaintVert: Paint? = null
+    private var mBallRectBlue: RectF? = null
+    private var mBallRectGreen: RectF? = null
 
-    // Le RECTANGLE représentant la ZONE de la boule.
-    private var mBallRectB: RectF? = null
-    private var mBallRectV: RectF? = null
-
-    // Variables pour stocker la DERNIERE POSITION du toucher
-    private var mLastTouchX: Float = 0.toFloat()
-    private var mLastTouchY: Float = 0.toFloat()
-
-    // Indique si l'utilisateur a cliqué sur la balle.
-    // False = il a pas cliqué ; True = il a cliqué ;
-    private var a_cliquer: Boolean = false
-    private var a_cliquerV: Boolean = false
-
-    // La hauteur de l'écran
-    // Conversion en float car consomme moins de mémoire ; comparé à double (64bits), float(32bits) est moins précis
-    // Besoin de passer à Double si on veut être plus précis
     private var screenHeight: Float = 0.toFloat()
     private var screenWidth: Float = 0.toFloat()
 
-    val ballSize = 150 // Diamètre de la boule
+    private val ballSize = 150
 
+    private val touchStates = mutableMapOf<Int, Pair<Boolean, Boolean>>() // Map to store touch states for each pointer
 
-    // sert à lancer l'Initialisation, appelée lors de la création de l'instance de la vue.
     init {
         setupDrawing()
     }
 
-    // Méthode pour configurer le dessin initial de la boule.
     private fun setupDrawing() {
-        // Initialisation du PINCEAU.
-        mPaintBleu = Paint()
-        mPaintVert = Paint()
-        // Configuration de la COULEUR du pinceau en bleu.
-        mPaintBleu!!.color = Color.BLUE
-        mPaintVert!!.color = Color.GREEN
-        // Activation de LISSAGE (anti-alisaing) pour des bords plus lisses.
-        mPaintBleu!!.isAntiAlias = true
-        mPaintVert!!.isAntiAlias = true
-        // Configuration du style de dessin du pinceau à REMPLISSAGE.
-        mPaintBleu!!.style = Paint.Style.FILL
-        mPaintVert!!.style = Paint.Style.FILL
-        // Initialisation du rectangle représentant la boule.
-        val rectXB = 400f //  coordonnée de départ x
-        val rectYB = 400f //  coordonnée de départ y
-        val rectXV = 800f //  coordonnée de départ x
-        val rectYV = 1200f //  coordonnée de départ y
-        mBallRectB = RectF(rectXB, rectYB, rectXB + ballSize, rectYB + ballSize)
-        mBallRectV = RectF(rectXV, rectYV, rectXV + ballSize, rectYV + ballSize)
+        mPaintBlue = Paint().apply {
+            color = Color.BLUE
+            isAntiAlias = true
+            style = Paint.Style.FILL
+        }
 
-        // Récupération de la hauteur et largeur de l'écran
-        screenHeight = resources.displayMetrics.heightPixels.toFloat()-300 //Le -300 est un traficotage pour que ça colle avec les lignes de terrain
-        screenWidth = resources.displayMetrics.widthPixels.toFloat()-150 //Traficotage également
-        // ATTENTION: RISQUE DU TRAFICOTAGE EST QUE CA NEST VALABLE QUE SUR UN APPAREIL??
+        mPaintGreen = Paint().apply {
+            color = Color.GREEN
+            isAntiAlias = true
+            style = Paint.Style.FILL
+        }
+
+        val rectXBlue = 400f
+        val rectYBlue = 400f
+        val rectXGreen = 800f
+        val rectYGreen = 1200f
+        mBallRectBlue = RectF(rectXBlue, rectYBlue, rectXBlue + ballSize, rectYBlue + ballSize)
+        mBallRectGreen = RectF(rectXGreen, rectYGreen, rectXGreen + ballSize, rectYGreen + ballSize)
+
+        screenHeight = resources.displayMetrics.heightPixels.toFloat() - 300
+        screenWidth = resources.displayMetrics.widthPixels.toFloat() - 150
     }
 
-    // Méthode appelée pour dessiner la vue.
-    // Redéfinition de la méthode pour dessiner la boule
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        // Dessin de la boule sur le canvas avec le pinceau configuré.
-        canvas.drawOval(mBallRectB!!, mPaintBleu!!)
-        canvas.drawOval(mBallRectV!!, mPaintVert!!)
+        canvas.drawOval(mBallRectBlue!!, mPaintBlue!!)
+        canvas.drawOval(mBallRectGreen!!, mPaintGreen!!)
     }
 
-    // Méthode pour mettre à jour la position de la boule en fonction des coordonnées x et y fournies.
-    private fun updateBallBPosition(x: Float, y: Float) {
-        // Vérifie si la nouvelle position est dans la moitié supérieure de l'écran
-        // Si oui, alors on change les attributs=position de mBallRect qui est le rectangle où est inscrit la balleS
-        if (y >= 12 && y <= screenHeight / 2 && x >= 12 && x <= screenWidth) {
-            mBallRectB!!.left = x
-            mBallRectB!!.top = y
-            mBallRectB!!.right = x + ballSize
-            mBallRectB!!.bottom = y + ballSize
-        }
-    }
-
-    private fun updateBallVPosition(x: Float, y: Float) {
-        // Vérifie si la nouvelle position est dans la moitié supérieure de l'écran
-        // Si oui, alors on change les attributs=position de mBallRect qui est le rectangle où est inscrit la balleS
-        if (y < screenHeight+150 && y > screenHeight / 2 +150 && x >= 12 && x <= screenWidth) {
-            mBallRectV!!.left = x
-            mBallRectV!!.top = y
-            mBallRectV!!.right = x + ballSize
-            mBallRectV!!.bottom = y + ballSize
-        }
-    }
-
-
-
-    // Redéfinition de onTouchEvent
-    // Méthode appelée lorsqu'un événement tactile est détecté sur la vue.
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        // Récupération des coordonnées x et y de l'événement tactile.
-        val x = event.x
-        val y = event.y
+        val pointerIndex = event.actionIndex
+        val pointerId = event.getPointerId(pointerIndex)
+        val x = event.getX(pointerIndex)
+        val y = event.getY(pointerIndex)
 
-        // Gestion des différents types d'actions tactiles.
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                // Lorsque l'utilisateur appuie sur l'écran,
-                // vérifie si la position de l'événement est à l'intérieur de la boule.
-                if (mBallRectB!!.contains(x, y)) {
-                    // Indique que l'utilisateur a cliqué sur la boule bleue.
-                    a_cliquer = true
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                val touchState = touchStates[pointerId] ?: Pair(false, false)
+                if (mBallRectBlue!!.contains(x, y)) {
+                    touchStates[pointerId] = Pair(true, touchState.second)
                 }
-                if (mBallRectV!!.contains(x, y)) {
-                    // Indique que l'utilisateur a cliqué sur la boule verte.
-                    a_cliquerV = true
+                if (mBallRectGreen!!.contains(x, y)) {
+                    touchStates[pointerId] = Pair(touchState.first, true)
                 }
-                // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                mLastTouchX = x
-                mLastTouchY = y
             }
             MotionEvent.ACTION_MOVE -> {
-                // Vérifie si l'utilisateur a cliqué sur la boule bleue avant de commencer à la déplacer.
-                if (a_cliquer) {
-                    // Calcul de la différence de position entre le toucher actuel et le toucher précédent.
-                    val diffx = x - mLastTouchX
-                    val diffy = y - mLastTouchY
-                    // Met à jour la position de la boule bleue en ajoutant la différence de position à sa position actuelle.
-                    updateBallBPosition(mBallRectB!!.left + diffx, mBallRectB!!.top + diffy)
-                    // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchX = x
-                    mLastTouchY = y
-                    // Demande à la vue de se redessiner pour afficher la nouvelle position de la boule bleue.
-                    invalidate()
-                }
-                // Vérifie si l'utilisateur a cliqué sur la boule verte avant de commencer à la déplacer.
-                if (a_cliquerV) {
-                    // Calcul de la différence de position entre le toucher actuel et le toucher précédent.
-                    val diffx = x - mLastTouchX
-                    val diffy = y - mLastTouchY
-                    // Met à jour la position de la boule verte en ajoutant la différence de position à sa position actuelle.
-                    updateBallVPosition(mBallRectV!!.left + diffx, mBallRectV!!.top + diffy)
-                    // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchX = x
-                    mLastTouchY = y
-                    // Demande à la vue de se redessiner pour afficher la nouvelle position de la boule verte.
-                    invalidate()
+                for ((pointerId, touchState) in touchStates) {
+                    val pointerIndex = event.findPointerIndex(pointerId)
+                    val x = event.getX(pointerIndex)
+                    val y = event.getY(pointerIndex)
+                    if (touchState.first) {
+                        updateBallPositionBlue(x, y)
+                    }
+                    if (touchState.second) {
+                        updateBallPositionGreen(x, y)
+                    }
                 }
             }
-            MotionEvent.ACTION_UP -> {
-                // Réinitialise l'état de glissement lorsque l'utilisateur relâche l'écran.
-                a_cliquer = false
-                a_cliquerV = false
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
+                touchStates.remove(pointerId)
             }
         }
 
-        // Indique que l'événement a été traité.
+        invalidate()
         return true
     }
 
+    private fun updateBallPositionBlue(x: Float, y: Float) {
+        if (y >= 12 && y <= screenHeight / 2 && x >= 12 && x <= screenWidth) {
+            mBallRectBlue!!.left = x - ballSize / 2
+            mBallRectBlue!!.top = y - ballSize / 2
+            mBallRectBlue!!.right = x + ballSize / 2
+            mBallRectBlue!!.bottom = y + ballSize / 2
+        }
+    }
+
+    private fun updateBallPositionGreen(x: Float, y: Float) {
+        if (y < screenHeight + 150 && y > screenHeight / 2 + 150 && x >= 12 && x <= screenWidth) {
+            mBallRectGreen!!.left = x - ballSize / 2
+            mBallRectGreen!!.top = y - ballSize / 2
+            mBallRectGreen!!.right = x + ballSize / 2
+            mBallRectGreen!!.bottom = y + ballSize / 2
+        }
+    }
 }
