@@ -22,15 +22,12 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     private var mBallRectV: RectF? = null
 
     // Variables pour stocker la DERNIERE POSITION du toucher
-    private var mLastTouchXB: Float = 0.toFloat()
-    private var mLastTouchYB: Float = 0.toFloat()
-
-    private var mLastTouchXV: Float = 0.toFloat()
-    private var mLastTouchYV: Float = 0.toFloat()
+    private var mLastTouchX: Float = 0.toFloat()
+    private var mLastTouchY: Float = 0.toFloat()
 
     // Indique si l'utilisateur a cliqué sur la balle.
     // False = il a pas cliqué ; True = il a cliqué ;
-    private var a_cliquerB: Boolean = false
+    private var a_cliquer: Boolean = false
     private var a_cliquerV: Boolean = false
 
     // La hauteur de l'écran
@@ -61,15 +58,11 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         // Configuration du style de dessin du pinceau à REMPLISSAGE.
         mPaintBleu!!.style = Paint.Style.FILL
         mPaintVert!!.style = Paint.Style.FILL
-
-        val h = resources.displayMetrics.heightPixels.toFloat()
-        val w = resources.displayMetrics.widthPixels.toFloat()
-
         // Initialisation du rectangle représentant la boule.
-        val rectXB = w / 2 //  coordonnée de départ x
-        val rectYB = h / 4 //  coordonnée de départ y
-        val rectXV = w / 2 //  coordonnée de départ x
-        val rectYV = 3*h / 4 //  coordonnée de départ y
+        val rectXB = 400f //  coordonnée de départ x
+        val rectYB = 400f //  coordonnée de départ y
+        val rectXV = 800f //  coordonnée de départ x
+        val rectYV = 1200f //  coordonnée de départ y
         mBallRectB = RectF(rectXB, rectYB, rectXB + ballSize, rectYB + ballSize)
         mBallRectV = RectF(rectXV, rectYV, rectXV + ballSize, rectYV + ballSize)
 
@@ -117,17 +110,8 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
     // Méthode appelée lorsqu'un événement tactile est détecté sur la vue.
     override fun onTouchEvent(event: MotionEvent): Boolean {
         // Récupération des coordonnées x et y de l'événement tactile.
-        var xB = event.getX(0)
-        var yB = event.getY(0)
-
-        var xV: Float =0.toFloat()
-        var yV: Float =0.toFloat()
-
-        val pointerCount = event.pointerCount
-        if (pointerCount > 1) {
-            xV = event.getX(1)
-            yV = event.getY(1)
-        }
+        val x = event.x
+        val y = event.y
 
         // Gestion des différents types d'actions tactiles.
         // ACTION_DOWN veut dire doigt DOWN sur l'écran
@@ -135,46 +119,42 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
             MotionEvent.ACTION_DOWN -> {
                 // Lorsque l'utilisateur appuie sur l'écran,
                 // vérifie si la position de l'événement est à l'intérieur de la boule.
-                if (mBallRectB!!.contains(xB, yB)) {
+                if (mBallRectB!!.contains(x, y)) {
                     // Indique que l'utilisateur a cliqué sur la balle.
-                    a_cliquerB = true
-                    // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchXB = xB
-                    mLastTouchYB = yB
+                    a_cliquer = true
                 }
-                if (mBallRectV!!.contains(xV, yV)) {
+                if (mBallRectV!!.contains(x, y)) {
                     // Indique que l'utilisateur a cliqué sur la balle.
                     a_cliquerV = true
-                    // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchXV = xV
-                    mLastTouchYV = yV
                 }
-
+                // Stocke la position du toucher actuel pour la prochaine mise à jour.
+                mLastTouchX = x
+                mLastTouchY = y
             }
             // ACTION_MOVE veut dire doigt MOVE sur l'écran
             MotionEvent.ACTION_MOVE -> {
                 // Vérifie si l'utilisateur a cliqué sur la balle avant de commencer à déplacer.
-                if (a_cliquerB) {
+                if (a_cliquer) {
                     // Calcul de la différence de position entre le toucher actuel et le toucher précédent.
-                    val diffx = xB - mLastTouchXB
-                    val diffy = yB - mLastTouchYB
+                    val diffx = x - mLastTouchX
+                    val diffy = y - mLastTouchY
                     // Met à jour la position de la boule en ajoutant la différence de position à sa position actuelle.
                     updateBallBPosition(mBallRectB!!.left + diffx, mBallRectB!!.top + diffy)
                     // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchXB = xB
-                    mLastTouchYB = yB
+                    mLastTouchX = x
+                    mLastTouchY = y
                     // Demande à la vue de se redessiner pour afficher la nouvelle position de la boule.
                     invalidate()
                 }
                 if (a_cliquerV) {
                     // Calcul de la différence de position entre le toucher actuel et le toucher précédent.
-                    val diffx = xV - mLastTouchXV
-                    val diffy = yV - mLastTouchYV
+                    val diffx = x - mLastTouchX
+                    val diffy = y - mLastTouchY
                     // Met à jour la position de la boule en ajoutant la différence de position à sa position actuelle.
                     updateBallVPosition(mBallRectV!!.left + diffx, mBallRectV!!.top + diffy)
                     // Stocke la position du toucher actuel pour la prochaine mise à jour.
-                    mLastTouchXV = xV
-                    mLastTouchYV = yV
+                    mLastTouchX = x
+                    mLastTouchY = y
                     // Demande à la vue de se redessiner pour afficher la nouvelle position de la boule.
                     invalidate()
                 }
@@ -182,7 +162,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
             //ACTION_UP veut dire doigts pas sur sur l'écran
             MotionEvent.ACTION_UP -> {
                 // Réinitialise l'état de glissement lorsque l'utilisateur relâche l'écran.
-                a_cliquerB = false
+                a_cliquer = false
                 a_cliquerV = false
             }
         }
