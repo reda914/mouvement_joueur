@@ -46,7 +46,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
 
     // Méthode pour configurer le dessin initial de la boule.
     private fun setupDrawing() {
-        // Initialisation du PINCEAU.
+        // Initialisation du PINCEAU
         mPaintBleu = Paint()
         mPaintVert = Paint()
         // Configuration de la COULEUR du pinceau en bleu.
@@ -76,7 +76,7 @@ class DrawingView(context: Context, attrs: AttributeSet) : View(context, attrs) 
         // ATTENTION: RISQUE DU TRAFICOTAGE EST QUE CA NEST VALABLE QUE SUR UN APPAREIL??
     }
 
-    // Méthode appelée pour dessiner la vue.
+    // Méthode appelée pour dssiner la vue.
     // Redéfinition de la méthode pour dessiner la boule
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
